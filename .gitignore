@@ -3,3 +3,12 @@ _site
 
 # MacOS
 .DS_Store
+
+# AWSIM
+docker/aichallenge/AWSIM/
+docker/aichallenge/AWSIM_Tutorial_Ubuntu_v1.0/
+
+# build
+docker/aichallenge/aichallenge_ws/build/
+docker/aichallenge/aichallenge_ws/install/
+docker/aichallenge/aichallenge_ws/log/
