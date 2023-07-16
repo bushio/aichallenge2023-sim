@@ -58,9 +58,9 @@ def launch_setup(context, *args, **kwargs):
         behavior_path_planner_param = yaml.safe_load(f)["/**"]["ros__parameters"]
 
     behavior_path_planner_component = ComposableNode(
-        package="behavior_path_planner",
+        package="behavior_path_planner_custom",
         plugin="behavior_path_planner::BehaviorPathPlannerNode",
-        name="behavior_path_planner",
+        name="behavior_path_planner_custom",
         namespace="",
         remappings=[
             ("~/input/route", LaunchConfiguration("input_route_topic_name")),
