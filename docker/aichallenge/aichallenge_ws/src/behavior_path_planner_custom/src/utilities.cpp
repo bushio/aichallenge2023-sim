@@ -857,7 +857,7 @@ bool containsGoal(const lanelet::ConstLanelets & lanes, const lanelet::Id & goal
   }
   return false;
 }
-
+// DrivableLanes を　Lanelets に変換
 lanelet::ConstLanelets transformToLanelets(const DrivableLanes & drivable_lanes)
 {
   lanelet::ConstLanelets lanes;
@@ -917,7 +917,7 @@ boost::optional<lanelet::ConstLanelet> getLeftLanelet(
 
   return {};
 }
-
+// Drivable Lane を生成する
 std::vector<DrivableLanes> generateDrivableLanes(const lanelet::ConstLanelets & lanes)
 {
   std::vector<DrivableLanes> drivable_lanes(lanes.size());
@@ -1986,11 +1986,14 @@ PathWithLaneId setDecelerationVelocity(
 {
   auto reference_path = input;
   if (
+    //lanelet_sequenceの最後のlaneletが車線の末端またはゴールであれば
     route_handler.isDeadEndLanelet(lanelet_sequence.back()) &&
     lane_change_prepare_duration > std::numeric_limits<double>::epsilon()) {
     for (auto & point : reference_path.points) {
       const double lane_length = lanelet::utils::getLaneletLength2d(lanelet_sequence);
+      //lanelet の始点からの距離
       const auto arclength = lanelet::utils::getArcCoordinates(lanelet_sequence, point.point.pose);
+      // 任意のポイントから車線変更し始めるポイントまでの距離
       const double distance_to_end =
         std::max(0.0, lane_length - std::abs(lane_change_buffer) - arclength.length);
       point.point.longitudinal_velocity_mps = std::min(

@@ -2,8 +2,8 @@
   ros__parameters:
     planning_hz: 10.0
 
-    backward_path_length: 5.0
-    forward_path_length: 200.0
+    backward_path_length: 5.0 # 取得するlanlet リストの後方の距離しきい値
+    forward_path_length: 200.0 # 取得するlanlet リストの前方の距離しきい値
     backward_length_buffer_for_end_of_pull_over: 5.0
     backward_length_buffer_for_end_of_pull_out: 5.0
     minimum_pull_over_length: 16.0

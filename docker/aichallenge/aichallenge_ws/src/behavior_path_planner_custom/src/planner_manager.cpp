@@ -42,11 +42,14 @@ BehaviorModuleOutput PlannerManager::run(const std::shared_ptr<PlannerData> & da
 {
   resetProcessingTime();
   stop_watch_.tic("total_time");
-
+  
+  //現在のlanelet を更新する
   if (!root_lanelet_) {
     root_lanelet_ = updateRootLanelet(data);
   }
 
+  // manager_ptrs_ に登録されたモジュールすべてに data　をセットする。 
+  // 各モジュールクラス　はSceneModuleInterface　クラスを継承している。
   std::for_each(
     manager_ptrs_.begin(), manager_ptrs_.end(), [&data](const auto & m) { m->setData(data); });
 
@@ -258,7 +261,8 @@ PlannerManager::selectHighestPriorityModule(
 }
 
 BehaviorModuleOutput PlannerManager::update(const std::shared_ptr<PlannerData> & data)
-{
+{ 
+  //　モジュールを使用せずに計算した走行経路を取得する。
   BehaviorModuleOutput output = getReferencePath(data);  // generate root reference path.
 
   bool remove_after_module = false;
@@ -330,17 +334,21 @@ BehaviorModuleOutput PlannerManager::getReferencePath(
   const auto backward_length =
     std::max(p.backward_path_length, p.backward_path_length + extra_margin);
 
+  //前方の終点から backward_distance 後方までのLanelet のリストを受け取る
   const auto lanelet_sequence = route_handler->getLaneletSequence(
     root_lanelet_.get(), pose, backward_length, std::numeric_limits<double>::max());
 
+  //現在位置から最もちかいlaneletを受け取る
   lanelet::ConstLanelet closest_lane{};
   if (!lanelet::utils::query::getClosestLanelet(lanelet_sequence, pose, &closest_lane)) {
     return {};
   }
 
+  //ConstLanelets型：現在位置からforward_distanceから backward_distance の間のLanelet のリストを受け取り、current_lanes とする
   const auto current_lanes =
     route_handler->getLaneletSequence(closest_lane, pose, backward_length, p.forward_path_length);
 
+  //PathWithLaneId 型: 各lanelet のcenterline 上のpoint のリスト返す
   reference_path = util::getCenterLinePath(
     *route_handler, current_lanes, pose, backward_length, p.forward_path_length, p);
 
@@ -348,26 +356,35 @@ BehaviorModuleOutput PlannerManager::getReferencePath(
   const size_t current_seg_idx = data->findEgoSegmentIndex(reference_path.points);
   util::clipPathLength(
     reference_path, current_seg_idx, p.forward_path_length, p.backward_path_length);
+
+  // reference path から　lanelet を生成する
   const auto drivable_lanelets = util::getLaneletsFromPath(reference_path, route_handler);
+
+  // laneletから　Drivable Lane を生成する
   const auto drivable_lanes = util::generateDrivableLanes(drivable_lanelets);
 
-  {
+  { 
+    // 車線変更回数
     const int num_lane_change =
       std::abs(route_handler->getNumLaneToPreferredLane(current_lanes.back()));
 
+    // 車線変更で走行する距離
     const double lane_change_buffer = util::calcLaneChangeBuffer(p, num_lane_change);
-
+    
+    // 車線変更のための速度を得る
     reference_path = util::setDecelerationVelocity(
       *route_handler, reference_path, current_lanes, parameters_->lane_change_prepare_duration,
       lane_change_buffer);
   }
-
+  // drivable_lanesの冗長な部分をカットして、shorten_lanes を受け取る
   const auto shorten_lanes = util::cutOverlappedLanes(reference_path, drivable_lanes);
 
+  // shorten_lanes の　lanedrivable_area に　offset 値を加算して,expanded_lanes として受け取る。
   const auto expanded_lanes = util::expandLanelets(
     shorten_lanes, parameters_->drivable_area_left_bound_offset,
     parameters_->drivable_area_right_bound_offset, parameters_->drivable_area_types_to_skip);
 
+  // expanded_lanesをもとに走行するエリアを決定して,reference_path 似格納する
   util::generateDrivableArea(reference_path, expanded_lanes, p.vehicle_length, data);
 
   BehaviorModuleOutput output;
