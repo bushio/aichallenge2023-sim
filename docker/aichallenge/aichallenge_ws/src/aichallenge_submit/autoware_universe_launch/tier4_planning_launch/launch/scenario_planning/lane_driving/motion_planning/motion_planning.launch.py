@@ -132,9 +132,9 @@ def launch_setup(context, *args, **kwargs):
     ) as f:
         obstacle_stop_planner_acc_param = yaml.safe_load(f)["/**"]["ros__parameters"]
     obstacle_stop_planner_component = ComposableNode(
-        package="obstacle_stop_planner",
+        package="obstacle_stop_planner_custom",
         plugin="motion_planning::ObstacleStopPlannerNode",
-        name="obstacle_stop_planner",
+        name="obstacle_stop_planner_custom",
         namespace="",
         remappings=[
             ("~/output/stop_reason", "/planning/scenario_planning/status/stop_reason"),
