@@ -1,0 +1,3 @@
+[submodule "docker/aichallenge/aichallenge_ws/src/crank_driving_planner"]
+	path = docker/aichallenge/aichallenge_ws/src/crank_driving_planner
+	url = git@github.com:bushio/crank_driving_planner.git
